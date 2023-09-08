@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking Registration Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main">
+        <div class="register">
+            <h2>Hotel Booking Registration Form</h2>
+            <form id="register" method="post">
+                <!-- Customer information start -->
+                <h3>Customer information</h3><hr>
+                <label>Customer Name:</label><br>
+                <input type="text" id="customer-name" required><br>
+                <label>Check-In Date:</label>
+                <input type="date" id="check-in-date" required><br>
+                <label>Total No. of Days:</label>
+                <input type="number" id="total-days" placeholder="0" required><br>
+                <label>Total No. of Persons:</label>
+                <input type="number" id="total-persons" placeholder="0" required><br><br>
+                <!-- Customer information ends -->
+
+                <!-- Room information starts -->
+                <h3>Room Information</h3><hr>
+                <label>Room Type:</label><br>
+                <select id="room-type">
+                    <option value="delux room">Delux Room</option>
+                    <option value="suite room">Suite Room</option>
+                </select><br>
+                <label>Amenities:</label><br>
+                <select id="amenities" multiple>
+                    <option value="AC">AC</option>
+                    <option value="Locker">Locker</option>
+                </select><br>
+                <!-- Room information ends -->
+
+                <label>Advance Payment:</label><br>
+                <input type="number" id="advance-payment" placeholder="0" required><br>
+                <label>Total Room Cost:</label><br>
+                <input type="number" id="total-room-cost" readonly><br>
+                <label>Total Amenities Cost:</label><br>
+                <input type="number" id="total-amenities-cost" readonly><br>
+                <label>Total Cost:</label><br>
+                <input type="number" id="total-cost" readonly><br>
+                <label>Balance Amount:</label><br>
+                <input type="number" id="balance-amount" readonly><br><br>
+                <button id="submit-button">Register</button>
+            </form>
+        
+              
+        </div>
+        <div class="submitted">
+            <h2>Submitted Bookings</h2>
+            <ul  class="submitted-list"  id="submitted-list"></ul>
+        </div>
+    </div>
+
+    <script>
+         
+        const totalDaysInput = document.getElementById('total-days');
+        const totalPersonsInput = document.getElementById('total-persons');
+        const roomTypeSelect = document.getElementById('room-type');
+        const amenitiesSelect = document.getElementById('amenities');
+        const advancePaymentInput = document.getElementById('advance-payment');
+        const totalRoomCostInput = document.getElementById('total-room-cost');
+        const totalAmenitiesCostInput = document.getElementById('total-amenities-cost');
+        const totalCostInput = document.getElementById('total-cost');
+        const balanceAmountInput = document.getElementById('balance-amount');
+
+        totalDaysInput.addEventListener('input', updateValues);
+        totalPersonsInput.addEventListener('input', updateValues);
+        roomTypeSelect.addEventListener('change', updateValues);
+        amenitiesSelect.addEventListener('change', updateValues);
+        advancePaymentInput.addEventListener('input', updateValues);
+
+        function updateValues() {
+            const totalDays = parseInt(totalDaysInput.value);
+            const totalPersons = parseInt(totalPersonsInput.value);
+            const roomRate = getRoomRate(roomTypeSelect.value);
+            const amenitiesCost = calculateAmenitiesCost(amenitiesSelect.selectedOptions);
+            const extraPersonCost = calculateExtraPersonCost(totalPersons);
+            const advancePayment = parseInt(advancePaymentInput.value);
+
+            const totalRoomCost = roomRate * totalDays;
+            const totalCost = totalRoomCost + amenitiesCost + extraPersonCost;
+            const balanceAmount = totalCost - advancePayment;
+
+            totalRoomCostInput.value = totalRoomCost;
+            totalAmenitiesCostInput.value = amenitiesCost;
+            totalCostInput.value = totalCost;
+            balanceAmountInput.value = balanceAmount;
+        }
+
+        function getRoomRate(roomType) {
+            if (roomType === 'delux room') {
+                return 2500;
+            } else if (roomType === 'suite room') {
+                return 4000;
+            }
+            return 0;
+        }
+
+        function calculateAmenitiesCost(selectedOptions) {
+            let totalCost = 0;
+            for (const option of selectedOptions) {
+                if (option.value === 'AC') {
+                    totalCost += 1000;
+                } else if (option.value === 'Locker') {
+                    totalCost += 300;
+                }
+            }
+            return totalCost;
+        }
+
+        function calculateExtraPersonCost(totalPersons) {
+            if (totalPersons > 2) {
+                return 1000 * (totalPersons - 2);
+            }
+            return 0;
+        }
+
+        // Initial calculation
+        updateValues();
+    
+        const submitButton = document.getElementById('submit-button');
+        const submittedList = document.getElementById('submitted-list');
+
+        submitButton.addEventListener('click', handleSubmit);
+
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            // Get form values
+            const customerName = document.getElementById('customer-name').value;
+            const checkInDate = document.getElementById('check-in-date').value;
+            const totalDays = parseInt(document.getElementById('total-days').value);
+            const totalPersons = parseInt(document.getElementById('total-persons').value);
+            const roomType = document.getElementById('room-type').value;
+            const amenities = Array.from(document.getElementById('amenities').selectedOptions).map(option => option.value);
+            const advancePayment = parseInt(document.getElementById('advance-payment').value);
+            const totalRoomCost = parseFloat(document.getElementById('total-room-cost').value);
+            const totalAmenitiesCost = parseFloat(document.getElementById('total-amenities-cost').value);
+            const totalCost = parseFloat(document.getElementById('total-cost').value);
+            const balanceAmount = parseFloat(document.getElementById('balance-amount').value);
+
+            // Create a booking object
+            const booking = {
+                customerName,
+                checkInDate,
+                totalDays,
+                totalPersons,
+                roomType,
+                amenities,
+                advancePayment,
+                totalRoomCost,
+                totalAmenitiesCost,
+                totalCost,
+                balanceAmount
+            };
+
+            // Store booking data in localStorage
+            const submittedBookings = JSON.parse(localStorage.getItem('submittedBookings')) || [];
+            submittedBookings.push(booking);
+            localStorage.setItem('submittedBookings', JSON.stringify(submittedBookings));
+
+            // Update submitted list
+            updateSubmittedList();
+
+            // Clear form
+            document.getElementById('register').reset();
+        }
+
+        function updateSubmittedList() {
+    submittedList.innerHTML = '';
+
+    const submittedBookings = JSON.parse(localStorage.getItem('submittedBookings')) || [];
+    submittedBookings.forEach((booking, index) => {
+        const table = document.createElement('table');
+        table.classList.add('submitted-booking-table');
+
+        const rowData = [
+            ['Booking:', `Booking ${index + 1}`],
+            ['Customer Name:', booking.customerName],
+            ['Check-In Date:', booking.checkInDate],
+            ['Total Days:', booking.totalDays],
+            ['Total Persons:', booking.totalPersons],
+            ['Room Type:', booking.roomType],
+            ['Amenities:', booking.amenities.join(', ')],
+            ['Advance Payment:', booking.advancePayment],
+            ['Total Room Cost:', booking.totalRoomCost],
+            ['Total Amenities Cost:', booking.totalAmenitiesCost],
+            ['Total Cost:', booking.totalCost],
+            ['Balance Amount:', booking.balanceAmount]
+        ];
+
+        rowData.forEach(rowDataArray => {
+            const row = table.insertRow();
+            rowDataArray.forEach(cellData => {
+                const cell = row.insertCell();
+                cell.textContent = cellData;
+            });
+        });
+
+        submittedList.appendChild(table);
+    });
+}
+
+
+        // Initial update of submitted list
+        updateSubmittedList();
+    </script>
+</body>
+</html>
